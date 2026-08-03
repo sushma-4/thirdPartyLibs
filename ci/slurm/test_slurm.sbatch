@@ -6,6 +6,7 @@
 #SBATCH --partition=geos_cicd
 #SBATCH --nodes=1
 #SBATCH --nodelist=pine-n[01-48]
+#SBATCH --account=atc
 
 set -euo pipefail
 
