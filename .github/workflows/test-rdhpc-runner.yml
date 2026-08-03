@@ -1,52 +1,61 @@
-name: Test rdhpc runner
+name: Test geos_cicd_partition runner
 
 on:
   workflow_dispatch:
 
 jobs:
-  test-runner:
-    name: Test self-hosted runner for Houston RDHPC builds
+  test-slurm:
+    name: Submit tiny Slurm job
     runs-on: [self-hosted]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Show basic runner information
-        run: |
-          echo "Hello from the cluster runner"
-          echo "Hostname:"
-          hostname
-
-          echo "Current directory:"
-          pwd
-
-          echo "Git commit:"
-          git rev-parse HEAD
-
-          echo "UTC date:"
-          date -u +"%Y-%m-%dT%H:%M:%SZ"
-
-      - name: Check Slurm access
-        run: |
-          echo "Checking Slurm commands..."
-          which sbatch || true
-          which sacct || true
-          which squeue || true
-
       - name: Submit test Slurm job
         run: |
           chmod +x ci/slurm/test_slurm.sbatch
+
           JOBID=$(sbatch --parsable ci/slurm/test_slurm.sbatch)
           echo "Submitted Slurm job: ${JOBID}"
           echo "${JOBID}" > slurm_job_id.txt
+
+      - name: Wait for Slurm job
+        run: |
+          JOBID=$(cat slurm_job_id.txt)
+
+          while true; do
+            STATE=$(sacct -j "${JOBID}" -X --format=State --noheader | head -n 1 | awk '{print $1}')
+            echo "Slurm job ${JOBID} state: ${STATE}"
+
+            case "${STATE}" in
+              COMPLETED)
+                echo "Slurm test completed successfully"
+                exit 0
+                ;;
+              FAILED|CANCELLED|TIMEOUT|OUT_OF_MEMORY|NODE_FAIL|BOOT_FAIL|DEADLINE|PREEMPTED)
+                echo "Slurm test failed with state: ${STATE}"
+                exit 1
+                ;;
+              "")
+                echo "No state returned yet. Waiting..."
+                sleep 10
+                ;;
+              *)
+                echo "Job still active or pending: ${STATE}"
+                sleep 10
+                ;;
+            esac
+          done
 
       - name: Show Slurm output
         if: always()
         run: |
           echo "Slurm output files:"
           ls -l gha-slurm-test-*.out gha-slurm-test-*.err || true
+
           echo "stdout:"
           cat gha-slurm-test-*.out || true
+
           echo "stderr:"
           cat gha-slurm-test-*.err || true
