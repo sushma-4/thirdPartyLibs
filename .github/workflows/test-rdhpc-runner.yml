@@ -39,11 +39,11 @@ jobs:
                 ;;
               "")
                 echo "No state returned yet. Waiting..."
-                sleep 10
+                sleep 120
                 ;;
               *)
                 echo "Job still active or pending: ${STATE}"
-                sleep 10
+                sleep 120
                 ;;
             esac
           done
