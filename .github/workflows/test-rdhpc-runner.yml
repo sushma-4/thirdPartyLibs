@@ -1,0 +1,35 @@
+name: Test rdhpc runner
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-runner:
+    name: Test self-hosted runner for Houston RDHPC builds
+    runs-on: [self-hosted]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Show basic runner information
+        run: |
+          echo "Hello from the cluster runner"
+          echo "Hostname:"
+          hostname
+
+          echo "Current directory:"
+          pwd
+
+          echo "Git commit:"
+          git rev-parse HEAD
+
+          echo "UTC date:"
+          date -u +"%Y-%m-%dT%H:%M:%SZ"
+
+      - name: Check Slurm access
+        run: |
+          echo "Checking Slurm commands..."
+          which sbatch || true
+          which sacct || true
+          which squeue || true
