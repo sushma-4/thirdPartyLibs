@@ -1,35 +1,38 @@
-name: Build_pine_aocc
+name: TTE-TPL-builds
 
 on:
   workflow_dispatch:
 
+# Allow this workflow to push updates back to the fork
+permissions:
+  contents: write
+
+# Prevent two TPL-build workflows from running at the same time on the same branch
+concurrency:
+  group: tpl-build-${{ github.ref_name }}
+  cancel-in-progress: false
+
+
 jobs:
-  build-TPLs:
-    name: Build-TPLs-pine-aocc
+  prepare-source:
+    name: Prepare latest TPL source
     runs-on: pine
+    timeout-minutes: 20
+
+    env:
+      UPSTREAM_URL: https://github.com/GEOS-DEV/thirdPartyLibs.git
+      UPSTREAM_BRANCH: master
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
 
-      - name: Show basic runner information
-        run: |
-          echo "Hello from the cluster runner"
-          echo "Hostname:"
-          hostname
-
-          echo "Current directory:"
-          pwd
-
-          echo "Git commit:"
-          git rev-parse HEAD
-
-          echo "UTC date:"
-          date -u +"%Y-%m-%dT%H:%M:%SZ"
-
-      - name: Check Slurm access
-        run: |
-          echo "Checking Slurm commands..."
-          which sbatch || true
-          which sacct || true
-          which squeue || true
+    - name: Update fork with upstream
+      run: |
+        set -euo pipefail
+        
+        git fetch "${UPSTREAM_URL}" "${UPSTREAM_BRANCH}"
+        git merge --no-edit FETCH_HEAD
