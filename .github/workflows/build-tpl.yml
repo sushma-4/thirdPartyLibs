@@ -30,9 +30,9 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
-    - name: Update fork with upstream
-      run: |
-        set -euo pipefail
+      - name: Update fork with upstream
+        run: |
+          set -euo pipefail
         
-        git fetch "${UPSTREAM_URL}" "${UPSTREAM_BRANCH}"
-        git merge --no-edit FETCH_HEAD
+          git fetch "${UPSTREAM_URL}" "${UPSTREAM_BRANCH}"
+          git merge --no-edit FETCH_HEAD
