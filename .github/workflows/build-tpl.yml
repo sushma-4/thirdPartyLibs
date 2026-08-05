@@ -48,11 +48,5 @@ jobs:
 
           echo "Upstream SHA: ${TPL_SHA}"
           echo "tpl_sha=${TPL_SHA}" >> "$GITHUB_OUTPUT"
-
-      - name: Push updated fork
-        run: |
-          set -euo pipefail
-          git push origin HEAD:${{ github.ref_name }}
-
           
     
