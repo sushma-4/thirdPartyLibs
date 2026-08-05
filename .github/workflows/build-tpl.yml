@@ -36,7 +36,7 @@ jobs:
           git lfs install --local
           git fetch "${UPSTREAM_URL}" "${UPSTREAM_BRANCH}"
 
-          TPL_SHA = "$(git rev-parse FETCH_HEAD)"
+          TPL_SHA="$(git rev-parse FETCH_HEAD)"
           
           git lfs pull
           git submodule update --init
