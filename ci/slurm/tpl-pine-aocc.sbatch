@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --job-name=gha-slurm-test
-#SBATCH --output=gha-slurm-test-%j.out
-#SBATCH --error=gha-slurm-test-%j.err
+#SBATCH --job-name=gha-tpl-build
+#SBATCH --output=${LOG_DIR}/gha-tpl-build-%j.out
+#SBATCH --error=${LOG_DIR}/gha-tpl-build-%j.err
 #SBATCH --time=01:00:00
 #SBATCH --partition=geos_cicd
 #SBATCH --nodes=1
@@ -9,6 +9,12 @@
 #SBATCH --account=atc
 
 set -euo pipefail
+
+PLATFORM=$1
+COMPILER=$2
+BUILD_DATE=$3
+TPL_SHA=$4
+LOG_DIR=$5
 
 module load aocc/5.1.0
 module load aocl/5.1.0-aocc 
@@ -23,3 +29,4 @@ echo "Working directory: $(pwd)"
     --spec "~openmp~pygeosx~docs %aocc-5"                              \
     --spack-env-file=scripts/spack_configs/pine/spack_amd.yaml     \
     --project-json=.uberenv_config.json                        \
+    --prefix="/home/svcgeoscicd/installations/${PLATFORM}/${COMPILER}/tpl_install/${BUILD_DATE}_${TPL_SHA}" 

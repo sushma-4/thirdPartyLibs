@@ -50,7 +50,8 @@ jobs:
           git lfs pull
           git submodule update --init --recursive
 
-          echo "Upstream SHA: ${UPSTREAM_SHA}"
+          echo "~~~~~~~~~~ Upstream SHA: ${UPSTREAM_SHA}"
+          
           echo "upstream_sha=${UPSTREAM_SHA}" >> "$GITHUB_OUTPUT"
           echo "upstream_short_sha=${UPSTREAM_SHORT_SHA}" >> "$GITHUB_OUTPUT"
           echo "build_date=$(date -u +'%Y-%m-%d')" >> "$GITHUB_OUTPUT"
@@ -78,8 +79,29 @@ jobs:
           ACTUAL_SHA=$(git rev-parse HEAD)
 
           if [[ "${ACTUAL_SHA}" == "${EXPECTED_SHA}" ]]; then
-            echo "ok -- building with expected source SHA: ${EXPECTED_SHA}"
+            echo "~~~~~~~~~~  OK -- building with expected source SHA: ${EXPECTED_SHA}"
           else
-            echo "error: expected ${EXPECTED_SHA}, got ${ACTUAL_SHA}"
+            echo "~~~~~~~~~~ error: expected ${EXPECTED_SHA}, got ${ACTUAL_SHA}"
             exit 1
           fi
+
+      - name: Build TPL
+        run: |
+          set -euo pipefail
+
+          PLATFORM="pine"
+          COMPILER="aocc"
+          BUILD_DATE="${{ needs.prepare-source.outputs.build_date }}"
+          TPL_SHA="${{ needs.prepare-source.outputs.upstream_short_sha }}"
+
+          BASE_INSTALL_DIR="/home/svcgeoscicd/installations"
+          LOG_DIR="/home/svcgeoscicd/installations/LOGS"
+
+          mkdir -p "${BASE_INSTALL_DIR}/${PLATFORM}/${COMPILER}/tpl_install/${BUILD_DATE}_${TPL_SHA}"
+
+          chmod +x ci/slurm/tpl-pine-aocc.sbatch
+          JOBID=$(sbatch ci/slurm/tpl-pine-aocc.sbatch "${PLATFORM}" "${COMPILER}" "${BUILD_DATE}" "${TPL_SHA}" "${LOG_DIR}")
+          
+          echo "Submitted job with ID: ${JOBID}"
+
+          
