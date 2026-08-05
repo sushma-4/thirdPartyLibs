@@ -23,6 +23,9 @@ jobs:
       UPSTREAM_URL: https://github.com/GEOS-DEV/thirdPartyLibs.git
       UPSTREAM_BRANCH: master
 
+    outputs:
+      tpl_sha: ${{ steps.update-source.outputs.tpl_sha }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -36,10 +39,20 @@ jobs:
           git lfs install --local
           git fetch "${UPSTREAM_URL}" "${UPSTREAM_BRANCH}"
 
-          TPL_SHA="$(git rev-parse FETCH_HEAD)"
+          TPL_SHA="$(git rev-parse --short FETCH_HEAD)"
           
+          git merge --no-edit FETCH_HEAD
+
           git lfs pull
-          git submodule update --init
+          git submodule update --init --recursive
 
           echo "Upstream SHA: ${TPL_SHA}"
+          echo "tpl_sha=${TPL_SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Push updated fork
+        run: |
+          set -euo pipefail
+          git push origin HEAD:${{ github.ref_name }}
+
+          
     
