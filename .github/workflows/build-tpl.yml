@@ -25,6 +25,7 @@ jobs:
 
     outputs:
       upstream_sha: ${{ steps.sync-with-upstream.outputs.upstream_sha }}
+      upstream_short_sha: ${{ steps.sync-with-upstream.outputs.upstream_short_sha }}
       build_date: ${{ steps.sync-with-upstream.outputs.build_date }}
 
     steps:
@@ -41,8 +42,9 @@ jobs:
           git lfs install --local
           git fetch "${UPSTREAM_URL}" "${UPSTREAM_BRANCH}"
 
-          UPSTREAM_SHA="$(git rev-parse --short FETCH_HEAD)"
-          
+          UPSTREAM_SHA="$(git rev-parse FETCH_HEAD)"
+          UPSTREAM_SHORT_SHA="$(git rev-parse --short FETCH_HEAD)"
+
           git merge --no-edit FETCH_HEAD
 
           git lfs pull
@@ -50,6 +52,7 @@ jobs:
 
           echo "Upstream SHA: ${UPSTREAM_SHA}"
           echo "upstream_sha=${UPSTREAM_SHA}" >> "$GITHUB_OUTPUT"
+          echo "upstream_short_sha=${UPSTREAM_SHORT_SHA}" >> "$GITHUB_OUTPUT"
           echo "build_date=$(date -u +'%Y-%m-%d')" >> "$GITHUB_OUTPUT"
           
   build-tpl:
