@@ -24,7 +24,8 @@ jobs:
       UPSTREAM_BRANCH: master
 
     outputs:
-      tpl_sha: ${{ steps.update-source.outputs.tpl_sha }}
+      upstream_sha: ${{ steps.sync-with-upstream.outputs.upstream_sha }}
+      build_date: ${{ steps.sync-with-upstream.outputs.build_date }}
 
     steps:
       - name: Checkout repository
@@ -32,21 +33,50 @@ jobs:
         with:
           fetch-depth: 0
           
-      - name: Update for latest source
+      - name: Sync with upstream
+        id: sync-with-upstream
         run: |
           set -euo pipefail
 
           git lfs install --local
           git fetch "${UPSTREAM_URL}" "${UPSTREAM_BRANCH}"
 
-          TPL_SHA="$(git rev-parse --short FETCH_HEAD)"
+          UPSTREAM_SHA="$(git rev-parse --short FETCH_HEAD)"
           
           git merge --no-edit FETCH_HEAD
 
           git lfs pull
           git submodule update --init --recursive
 
-          echo "Upstream SHA: ${TPL_SHA}"
-          echo "tpl_sha=${TPL_SHA}" >> "$GITHUB_OUTPUT"
+          echo "Upstream SHA: ${UPSTREAM_SHA}"
+          echo "upstream_sha=${UPSTREAM_SHA}" >> "$GITHUB_OUTPUT"
+          echo "build_date=$(date -u +'%Y-%m-%d')" >> "$GITHUB_OUTPUT"
           
-    
+  build-tpl:
+    name: Build TPL pine-aocc
+    needs: prepare-source
+    runs-on: [pine]
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout prepared source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare-source.outputs.upstream_sha }}
+          fetch-depth: 0
+          lfs: true
+          submodules: true
+
+      - name: Confirm prepared source
+        run: |
+          set -euo pipefail
+
+          EXPECTED_SHA="${{ needs.prepare-source.outputs.upstream_sha }}"
+          ACTUAL_SHA=$(git rev-parse HEAD)
+
+          if [[ "${ACTUAL_SHA}" == "${EXPECTED_SHA}" ]]; then
+            echo "ok -- building with expected source SHA: ${EXPECTED_SHA}"
+          else
+            echo "error: expected ${EXPECTED_SHA}, got ${ACTUAL_SHA}"
+            exit 1
+          fi
