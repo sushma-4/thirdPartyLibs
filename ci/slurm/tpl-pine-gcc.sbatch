@@ -13,9 +13,8 @@ COMPILER=$2
 BUILD_DATE=$3
 TPL_SHA=$4
 
-module load aocc/5.1.0
-module load aocl/5.1.0-aocc 
-module load openmpi-aocc/5.0.10 
+module load gcc/13.3.0
+module load openmpi-gcc/5.0.5 
 module load  cmake/3.27.9
 
 echo "Hostname: $(hostname)"
@@ -23,7 +22,7 @@ echo "Date UTC: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 echo "Working directory: $(pwd)"
 
 ./scripts/uberenv/uberenv.py                                  \
-    --spec "~openmp~pygeosx~docs %aocc-5"                              \
-    --spack-env-file=scripts/spack_configs/pine/spack_amd.yaml     \
+    --spec "~openmp~pygeosx~docs %gcc-13"                              \
+    --spack-env-file=scripts/spack_configs/pine/spack_gcc.yaml     \
     --project-json=.uberenv_config.json                        \
-    --prefix="/home/svcgeoscicd/installations/${PLATFORM}/${COMPILER}/tpl_install/${BUILD_DATE}_${TPL_SHA}" 
+    --prefix="/home/svcgeoscicd/installations/${PLATFORM}/${COMPILER}/tpl_install/${BUILD_DATE}_${TPL_SHA}"

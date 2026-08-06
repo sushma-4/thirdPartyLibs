@@ -62,10 +62,15 @@ jobs:
           echo "build_date=$(date -u +'%Y-%m-%d')" >> "$GITHUB_OUTPUT"
           
   build-tpl:
-    name: Build TPL pine-aocc
+    name: Build TPL ${{ matrix.platform }}-${{ matrix.compiler }}
     needs: prepare-source
     runs-on: [pine]
     timeout-minutes: 90
+
+    strategy:
+      matrix:
+        platform: [pine]
+        compiler: [aocc]
 
     steps:
       - name: Checkout prepared source
@@ -77,12 +82,12 @@ jobs:
           submodules: true
 
 
-      - name: Build TPL
+      - name: Build-TPL job
         run: |
           set -euo pipefail
 
-          PLATFORM="pine"
-          COMPILER="aocc"
+          PLATFORM="${{ matrix.platform }}"
+          COMPILER="${{ matrix.compiler }}"
           BUILD_DATE="${{ needs.prepare-source.outputs.build_date }}"
           TPL_SHA="${{ needs.prepare-source.outputs.upstream_short_sha }}"
 
@@ -91,9 +96,37 @@ jobs:
 
           mkdir -p "${BASE_INSTALL_DIR}/${PLATFORM}/${COMPILER}/tpl_install/${BUILD_DATE}_${TPL_SHA}"
 
-          chmod +x ci/slurm/tpl-pine-aocc.sbatch
-          JOBID=$(sbatch ci/slurm/tpl-pine-aocc.sbatch "${PLATFORM}" "${COMPILER}" "${BUILD_DATE}" "${TPL_SHA}" "${LOG_DIR}")
-          
-          echo "Submitted job with ID: ${JOBID}"
+          chmod +x ci/slurm/tpl-${PLATFORM}-${COMPILER}.sbatch
 
-          
+          set +e
+          JOBID=$(sbatch --wait --parsable --output "${LOG_DIR}/gha-tpl-build-%j.out" --error "${LOG_DIR}/gha-tpl-build-%j.err" ci/slurm/tpl-"${PLATFORM}"-"${COMPILER}".sbatch "${PLATFORM}" "${COMPILER}" "${BUILD_DATE}" "${TPL_SHA}")
+          RC=$?
+          set -e
+
+          echo "~~~~~~~~~~ Submitted job with ID: ${JOBID}"
+          echo "~~~~~~~~~~ Slurm sbatch exit code: ${RC}"
+
+          if [ "${RC}" -ne 0 ]; then
+            echo "Error: sbatch command failed with exit code ${RC}"
+            exit 1
+          fi
+
+      - name : Update links
+        run: |
+          set -euo pipefail
+
+          PLATFORM="${{ matrix.platform }}"
+          COMPILER="${{ matrix.compiler }}"
+          BUILD_DATE="${{ needs.prepare-source.outputs.build_date }}"
+          TPL_SHA="${{ needs.prepare-source.outputs.upstream_short_sha }}"
+
+          BASE_INSTALL_DIR="/home/svcgeoscicd/installations"
+          TPL_DIR="${BASE_INSTALL_DIR}/${PLATFORM}/${COMPILER}/tpl_install"
+                  
+          rm -rf "${TPL_DIR}/stable"
+          if [ -L "${TPL_DIR}/latest" ]; then
+            ln -s "$(readlink "${TPL_DIR}/latest")" "${TPL_DIR}/stable"
+          fi
+
+          rm -f "${TPL_DIR}/latest"
+          ln -s "${TPL_DIR}/${BUILD_DATE}_${TPL_SHA}" "${TPL_DIR}/latest"

@@ -3,7 +3,7 @@
 #SBATCH --time=01:00:00
 #SBATCH --partition=geos_cicd
 #SBATCH --nodes=1
-#SBATCH --nodelist=pine-n[01-48]
+#SBATCH --nodelist=pine-n[50-81]
 #SBATCH --account=atc
 
 set -euo pipefail
@@ -26,4 +26,4 @@ echo "Working directory: $(pwd)"
     --spec "~openmp~pygeosx~docs %aocc-5"                              \
     --spack-env-file=scripts/spack_configs/pine/spack_amd.yaml     \
     --project-json=.uberenv_config.json                        \
-    --prefix="/home/svcgeoscicd/installations/${PLATFORM}/${COMPILER}/tpl_install/${BUILD_DATE}_${TPL_SHA}" 
+    --prefix="/home/svcgeoscicd/installations/${PLATFORM}/${COMPILER}/tpl_install/${BUILD_DATE}_${TPL_SHA}"
