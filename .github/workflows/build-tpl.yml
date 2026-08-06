@@ -69,7 +69,7 @@ jobs:
 
     strategy:
       matrix:
-        platform: [pine]
+        platform: [pine,turin]
         compiler: [aocc]
 
     steps:
@@ -111,6 +111,8 @@ jobs:
             exit 1
           fi
 
+          cp ./*.cmake "${BASE_INSTALL_DIR}/${PLATFORM}/${COMPILER}/tpl_install/${BUILD_DATE}_${TPL_SHA}"
+
       - name : Update links
         run: |
           set -euo pipefail
@@ -123,10 +125,17 @@ jobs:
           BASE_INSTALL_DIR="/home/svcgeoscicd/installations"
           TPL_DIR="${BASE_INSTALL_DIR}/${PLATFORM}/${COMPILER}/tpl_install"
                   
-          rm -rf "${TPL_DIR}/stable"
+          if [ -L "${TPL_DIR}/stable" ]; then
+            rm -rf "$(readlink "${TPL_DIR}/stable")" "${TPL_DIR}/stable"
+          fi
+
           if [ -L "${TPL_DIR}/latest" ]; then
             ln -s "$(readlink "${TPL_DIR}/latest")" "${TPL_DIR}/stable"
           fi
 
           rm -f "${TPL_DIR}/latest"
           ln -s "${TPL_DIR}/${BUILD_DATE}_${TPL_SHA}" "${TPL_DIR}/latest"
+
+          echo "~~~~~~~~~~ Updated 'latest' and 'stable' links in ${TPL_DIR}"
+
+

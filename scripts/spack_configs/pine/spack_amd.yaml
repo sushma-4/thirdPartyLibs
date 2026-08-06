@@ -76,8 +76,8 @@ spack:
       buildable: false
     cmake:
       externals:
-      - spec: cmake@3.29.6
-        prefix: /hrtc/apps/devtools/spack/PINE/linux-rocky9-zen4/gcc-11.4.1/cmake-3.29.6-i23jd7kq7lyqvrpsguhznfhoy4mso6up
+      - spec: cmake@3.27.9
+        prefix: /hrtc/apps/devtools/spack/PINE/linux-rocky9-zen4/gcc-11.4.1/cmake-3.27.9-7vjtg6qwxhlfws2qt53saqy3jpict2ja
       buildable: false
     curl:
       externals:
@@ -177,4 +177,5 @@ spack:
   concretizer:
     unify: true
     reuse: false
+
 
