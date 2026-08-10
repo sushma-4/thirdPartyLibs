@@ -108,6 +108,7 @@ jobs:
 
           if [ "${RC}" -ne 0 ]; then
             echo "Error: sbatch command failed with exit code ${RC}"
+            rm -rf "${BASE_INSTALL_DIR}/${PLATFORM}/${COMPILER}/tpl_install/${BUILD_DATE}_${TPL_SHA}"
             exit 1
           fi
 
@@ -124,18 +125,12 @@ jobs:
 
           BASE_INSTALL_DIR="/home/svcgeoscicd/installations"
           TPL_DIR="${BASE_INSTALL_DIR}/${PLATFORM}/${COMPILER}/tpl_install"
-                  
-          if [ -L "${TPL_DIR}/stable" ]; then
-            rm -rf "$(readlink "${TPL_DIR}/stable")" "${TPL_DIR}/stable"
-          fi
 
+          # Remove the old build that 'latest' points to, then point 'latest' to the new build
           if [ -L "${TPL_DIR}/latest" ]; then
-            ln -s "$(readlink "${TPL_DIR}/latest")" "${TPL_DIR}/stable"
+            rm -rf "$(readlink "${TPL_DIR}/latest")"
           fi
 
-          rm -f "${TPL_DIR}/latest"
-          ln -s "${TPL_DIR}/${BUILD_DATE}_${TPL_SHA}" "${TPL_DIR}/latest"
+          ln -sfn "${TPL_DIR}/${BUILD_DATE}_${TPL_SHA}" "${TPL_DIR}/latest"
 
-          echo "~~~~~~~~~~ Updated 'latest' and 'stable' links in ${TPL_DIR}"
-
-
+          echo "~~~~~~~~~~ Updated 'latest' link in ${TPL_DIR} -> ${BUILD_DATE}_${TPL_SHA}"
