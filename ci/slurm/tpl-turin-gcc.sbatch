@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=gha-tpl-build
-#SBATCH --time=01:00:00
+#SBATCH --time=02:00:00
 #SBATCH --partition=geos_cicd
 #SBATCH --nodes=1
 #SBATCH --nodelist=pine-n[50-81]

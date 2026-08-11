@@ -70,7 +70,7 @@ jobs:
     strategy:
       matrix:
         platform: [pine,turin]
-        compiler: [aocc]
+        compiler: [aocc,gcc]
 
     steps:
       - name: Checkout prepared source
