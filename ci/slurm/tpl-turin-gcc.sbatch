@@ -14,7 +14,7 @@ BUILD_DATE=$3
 TPL_SHA=$4
 
 module load gcc/15.2.0
-module load openmpi-gcc15/5.0.10 
+module load openmpi-gcc/5.0.10 
 module load  cmake/3.27.9
 
 echo "Hostname: $(hostname)"
